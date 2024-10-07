@@ -1,1 +1,260 @@
+#include <iostream>
+#include <algorithm> 
+using namespace std;
+typedef int Rank;
+#define DEFAULT_CAPACITY 3
+template <typename T>
+
+class Vector
+{
+protected:
+    Rank _size;
+    int _capacity;
+    T* _elem;
+
+
+    T max(T a, T b)
+    {
+        return (a > b) ? a : b;
+    }
+
+
+    void expand()
+    {
+        if (_size < _capacity) return;
+        _capacity = max(_capacity, DEFAULT_CAPACITY) * 2;
+        T* newElem = new T[_capacity];
+        copyArray(newElem, _elem, _size);
+        delete[] _elem;
+        _elem = newElem;
+    }
+
+
+    void shrink()
+    {
+        if (_size >= _capacity / 4) return;
+        _capacity >>= 1;
+        T* newElem = new T[_capacity];
+        copyArray(newElem, _elem, _size);
+        delete[] _elem;
+        _elem = newElem;
+    }
+
+
+    void copyArray(T* dest, const T* src, Rank n)
+    {
+        for (Rank i = 0; i < n; ++i)
+        {
+            dest[i] = src[i];
+        }
+    }
+
+
+    void copyFrom(const T* A, Rank lo, Rank hi)
+    {
+        _elem = new T[_capacity = 2 * (hi - lo)];
+        _size = 0;
+        while (lo < hi)
+        {
+            _elem[_size++] = A[lo++];
+        }
+    }
+
+
+    void swap(T& a, T& b)
+    {
+        T temp = a;
+        a = b;
+        b = temp;
+    }
+
+
+    bool bubble(Rank lo, Rank hi)
+    {
+        bool sorted = true;
+        while (++lo < hi) {
+            if (_elem[lo - 1] > _elem[lo])
+            {
+                swap(_elem[lo - 1], _elem[lo]);
+                sorted = false;
+            }
+        }
+        return sorted;
+    }
+
+
+    void bubbleSort(Rank lo, Rank hi)
+    {
+        while (!bubble(lo, hi--));
+    }
+
+
+    Rank maxIndex(Rank lo, Rank hi)
+    {
+        Rank mx = lo;
+        for (Rank i = lo + 1; i < hi; i++)
+        {
+            if (_elem[mx] < _elem[i])
+            {
+                mx = i;
+            }
+        }
+        return mx;
+    }
+
+
+    void selectionSort(Rank lo, Rank hi)
+    {
+        while (lo < --hi)
+        {
+            swap(_elem[maxIndex(lo, hi)], _elem[hi]);
+        }
+    }
+
+
+    void merge(Rank lo, Rank mi, Rank hi)
+    {
+        T* A = _elem + lo;
+        Rank lb = mi - lo;
+        Rank lc = hi - mi;
+        T* B = new T[lb];
+        for (Rank i = 0; i < lb; i++) B[i] = A[i];
+        T* C = _elem + mi;
+        for (Rank i = 0, j = 0, k = 0; j < lb;)
+        {
+            if ((k < lc) && (C[k] < B[j])) A[i++] = C[k++];
+            if ((lc <= k) || (B[j] <= C[k])) A[i++] = B[j++];
+        }
+        delete[] B;
+    }
+
+
+    void mergeSort(Rank lo, Rank hi)
+    {
+        if (hi - lo < 2) return;
+        Rank mi = (lo + hi) / 2;
+        mergeSort(lo, mi);
+        mergeSort(mi, hi);
+        merge(lo, mi, hi);
+    }
+
+
+    void heapify(Rank lo, Rank hi, Rank i)
+    {
+        Rank largest = i;
+        Rank left = 2 * i + 1;
+        Rank right = 2 * i + 2;
+
+
+        if (left < hi && _elem[left] > _elem[largest])
+            largest = left;
+
+
+        if (right < hi && _elem[right] > _elem[largest])
+            largest = right;
+
+
+        if (largest != i)
+        {
+            swap(_elem[i], _elem[largest]);
+            heapify(lo, hi, largest);
+        }
+    }
+
+
+    void heapSort(Rank lo, Rank hi)
+    {
+        for (Rank i = (hi - lo) / 2 - 1; i >= 0; i--)
+            heapify(lo, hi, i);
+        for (Rank i = hi - 1; i > lo; i--)
+        {
+            swap(_elem[lo], _elem[i]);
+            heapify(lo, i, 0);
+        }
+    }
+
+public:
+
+    Vector(int c = DEFAULT_CAPACITY, int s = 0, T v = 0)
+    {
+        _elem = new T[_capacity = c];
+        for (_size = 0; _size < s; _elem[_size++] = v);
+    }
+
+
+    ~Vector()
+    {
+        delete[] _elem;
+    }
+
+
+    Rank size() const
+    {
+        return _size;
+    }
+
+
+    int capacity() const
+    {
+        return _capacity;
+    }
+
+
+    void insert(Rank r, const T& e)
+    {
+        expand();
+        for (Rank i = _size; i > r; i--)
+        {
+            _elem[i] = _elem[i - 1];
+        }
+        _elem[r] = e;
+        _size++;
+    }
+
+
+    T remove(Rank r)
+    {
+        T e = _elem[r];
+        for (Rank i = r; i < _size - 1; i++)
+        {
+            _elem[i] = _elem[i + 1];
+        }
+        _size--;
+        shrink();
+        return e;
+    }
+
+
+    T& operator[](Rank r)
+    {
+        return _elem[r];
+    }
+
+
+    void quickSort(Rank lo, Rank hi)
+    {
+        if (hi - lo < 2) return;
+        Rank mi = partition(lo, hi - 1);
+        quickSort(lo, mi);
+        quickSort(mi + 1, hi);
+    }
+
+
+    Rank partition(Rank lo, Rank hi)
+    {
+        T pivot = _elem[hi];
+        Rank i = lo - 1;
+        for (Rank j = lo; j < hi; j++)
+        {
+            if (_elem[j] <= pivot)
+            {
+                swap(_elem[++i], _elem[j]);
+            }
+        }
+        swap(_elem[i + 1], _elem[hi]);
+        return i + 1;
+    }
+};
+
+
 
