@@ -1,78 +1,82 @@
 #include <iostream>
-using namespace std; 
-typedef int Rank; 
+#include <vector>
+#include <cmath>   
+#include <ctime>   
+#include <algorithm> 
+using namespace std;
+typedef int Rank;
 #define DEFAULT_CAPACITY 3
 template <typename T>
 
-class Vector 
+class Vector
 {
 protected:
-    Rank _size;      
-    int _capacity;  
-    T* _elem;        
+    Rank _size;
+    int _capacity;
+    T* _elem;
 
-   
-    T max(T a, T b) 
+
+    T max(T a, T b)
     {
         return (a > b) ? a : b;
     }
 
-    
-    void expand() 
-    {
-        if (_size < _capacity) return; 
-        _capacity = max(_capacity, DEFAULT_CAPACITY) * 2; 
-        T* newElem = new T[_capacity]; 
-        copyArray(newElem, _elem, _size); 
-        delete[] _elem;
-        _elem = newElem;
-    }
 
-  
-    void shrink() 
+    void expand()
     {
-        if (_size >= _capacity / 4) return; 
-        _capacity >>= 1; 
+        if (_size < _capacity) return;
+        _capacity = max(_capacity, DEFAULT_CAPACITY) * 2;
         T* newElem = new T[_capacity];
-        copyArray(newElem, _elem, _size); 
+        copyArray(newElem, _elem, _size);
         delete[] _elem;
         _elem = newElem;
     }
 
-   
-    void copyArray(T* dest, const T* src, Rank n) 
+
+    void shrink()
     {
-        for (Rank i = 0; i < n; ++i) 
+        if (_size >= _capacity / 4) return;
+        _capacity >>= 1;
+        T* newElem = new T[_capacity];
+        copyArray(newElem, _elem, _size);
+        delete[] _elem;
+        _elem = newElem;
+    }
+
+
+    void copyArray(T* dest, const T* src, Rank n)
+    {
+        for (Rank i = 0; i < n; ++i)
         {
-            dest[i] = src[i]; 
+            dest[i] = src[i];
         }
     }
 
-    
-    void copyFrom(const T* A, Rank lo, Rank hi) 
+
+    void copyFrom(const T* A, Rank lo, Rank hi)
     {
-        _elem = new T[_capacity = 2 * (hi - lo)]; 
+        _elem = new T[_capacity = 2 * (hi - lo)];
         _size = 0;
-        while (lo < hi) 
+        while (lo < hi)
         {
-            _elem[_size++] = A[lo++]; 
+            _elem[_size++] = A[lo++];
         }
     }
 
-    
-    void swap(T& a, T& b) 
+
+    void swap(T& a, T& b)
     {
         T temp = a;
         a = b;
         b = temp;
     }
 
-    
-    bool bubble(Rank lo, Rank hi) 
+
+    bool bubble(Rank lo, Rank hi)
     {
         bool sorted = true;
         while (++lo < hi) {
-            if (_elem[lo - 1] > _elem[lo]) 
+            if (_elem[lo - 1] > _elem[lo])
             {
                 swap(_elem[lo - 1], _elem[lo]);
                 sorted = false;
@@ -81,19 +85,19 @@ protected:
         return sorted;
     }
 
-    
-    void bubbleSort(Rank lo, Rank hi) 
+
+    void bubbleSort(Rank lo, Rank hi)
     {
-        while (!bubble(lo, hi--)); 
+        while (!bubble(lo, hi--));
     }
 
-    
-    Rank maxIndex(Rank lo, Rank hi) 
+
+    Rank maxIndex(Rank lo, Rank hi)
     {
         Rank mx = lo;
-        for (Rank i = lo + 1; i < hi; i++) 
+        for (Rank i = lo + 1; i < hi; i++)
         {
-            if (_elem[mx] < _elem[i]) 
+            if (_elem[mx] < _elem[i])
             {
                 mx = i;
             }
@@ -101,25 +105,25 @@ protected:
         return mx;
     }
 
-    
-    void selectionSort(Rank lo, Rank hi) 
+
+    void selectionSort(Rank lo, Rank hi)
     {
-        while (lo < --hi) 
+        while (lo < --hi)
         {
             swap(_elem[maxIndex(lo, hi)], _elem[hi]);
         }
     }
 
-    
-    void merge(Rank lo, Rank mi, Rank hi) 
+
+    void merge(Rank lo, Rank mi, Rank hi)
     {
-        T* A = _elem + lo; 
+        T* A = _elem + lo;
         Rank lb = mi - lo;
         Rank lc = hi - mi;
-        T* B = new T[lb]; 
+        T* B = new T[lb];
         for (Rank i = 0; i < lb; i++) B[i] = A[i];
-        T* C = _elem + mi; 
-        for (Rank i = 0, j = 0, k = 0; j < lb;) 
+        T* C = _elem + mi;
+        for (Rank i = 0, j = 0, k = 0; j < lb;)
         {
             if ((k < lc) && (C[k] < B[j])) A[i++] = C[k++];
             if ((lc <= k) || (B[j] <= C[k])) A[i++] = B[j++];
@@ -127,82 +131,82 @@ protected:
         delete[] B;
     }
 
-  
-    void mergeSort(Rank lo, Rank hi) 
+
+    void mergeSort(Rank lo, Rank hi)
     {
-        if (hi - lo < 2) return; 
+        if (hi - lo < 2) return;
         Rank mi = (lo + hi) / 2;
         mergeSort(lo, mi);
         mergeSort(mi, hi);
-        merge(lo, mi, hi); 
+        merge(lo, mi, hi);
     }
 
-   
-    void heapify(Rank lo, Rank hi, Rank i) 
-    {
-        Rank largest = i; 
-        Rank left = 2 * i + 1; 
-        Rank right = 2 * i + 2; 
 
-        
+    void heapify(Rank lo, Rank hi, Rank i)
+    {
+        Rank largest = i;
+        Rank left = 2 * i + 1;
+        Rank right = 2 * i + 2;
+
+
         if (left < hi && _elem[left] > _elem[largest])
             largest = left;
 
-     
+
         if (right < hi && _elem[right] > _elem[largest])
             largest = right;
 
-       
-        if (largest != i) 
+
+        if (largest != i)
         {
             swap(_elem[i], _elem[largest]);
             heapify(lo, hi, largest);
         }
     }
 
-    
-    void heapSort(Rank lo, Rank hi) 
+
+    void heapSort(Rank lo, Rank hi)
     {
         for (Rank i = (hi - lo) / 2 - 1; i >= 0; i--)
             heapify(lo, hi, i);
-        for (Rank i = hi - 1; i > lo; i--) 
+        for (Rank i = hi - 1; i > lo; i--)
         {
-            swap(_elem[lo], _elem[i]); 
+            swap(_elem[lo], _elem[i]);
             heapify(lo, i, 0);
         }
     }
 
 public:
-    
-    Vector(int c = DEFAULT_CAPACITY, int s = 0, T v = 0) 
+
+    Vector(int c = DEFAULT_CAPACITY, int s = 0, T v = 0)
     {
         _elem = new T[_capacity = c];
         for (_size = 0; _size < s; _elem[_size++] = v);
     }
 
-   
-    ~Vector() 
+
+    ~Vector()
     {
         delete[] _elem;
     }
 
-    
-    Rank size() const 
+
+    Rank size() const
     {
         return _size;
     }
 
-   
-    int capacity() const 
+
+    int capacity() const
     {
         return _capacity;
     }
 
-    
-    void insert(Rank r, const T& e) 
+
+    void insert(Rank r, const T& e)
     {
-        expand(); 
-        for (Rank i = _size; i > r; i--) 
+        expand();
+        for (Rank i = _size; i > r; i--)
         {
             _elem[i] = _elem[i - 1];
         }
@@ -210,11 +214,11 @@ public:
         _size++;
     }
 
-    
-    T remove(Rank r) 
+
+    T remove(Rank r)
     {
         T e = _elem[r];
-        for (Rank i = r; i < _size - 1; i++) 
+        for (Rank i = r; i < _size - 1; i++)
         {
             _elem[i] = _elem[i + 1];
         }
@@ -223,29 +227,29 @@ public:
         return e;
     }
 
-    
-    T& operator[](Rank r) 
+
+    T& operator[](Rank r)
     {
         return _elem[r];
     }
 
-    
-    void quickSort(Rank lo, Rank hi) 
+
+    void quickSort(Rank lo, Rank hi)
     {
         if (hi - lo < 2) return;
-        Rank mi = partition(lo, hi - 1); 
-        quickSort(lo, mi);               
-        quickSort(mi + 1, hi);           
+        Rank mi = partition(lo, hi - 1);
+        quickSort(lo, mi);
+        quickSort(mi + 1, hi);
     }
 
-    
-    Rank partition(Rank lo, Rank hi) 
+
+    Rank partition(Rank lo, Rank hi)
     {
-        T pivot = _elem[hi]; 
+        T pivot = _elem[hi];
         Rank i = lo - 1;
-        for (Rank j = lo; j < hi; j++) 
+        for (Rank j = lo; j < hi; j++)
         {
-            if (_elem[j] <= pivot) 
+            if (_elem[j] <= pivot)
             {
                 swap(_elem[++i], _elem[j]);
             }
@@ -254,3 +258,232 @@ public:
         return i + 1;
     }
 };
+
+class Complex 
+{
+public:
+    double real, imag;
+    Complex(double r = 0, double i = 0) : real(r), imag(i) {}
+
+    double modulus() const 
+    {
+        return sqrt(real * real + imag * imag);
+    }
+
+    bool operator==(const Complex& other) const 
+    {
+        return real == other.real && imag == other.imag;
+    }
+
+    bool operator<(const Complex& other) const 
+    {
+        double mod1 = modulus();
+        double mod2 = other.modulus();
+        if (mod1 == mod2) 
+        {
+            return real < other.real;  
+        }
+        return mod1 < mod2;
+    }
+
+    bool operator>(const Complex& other) const 
+    {
+        double mod1 = modulus();
+        double mod2 = other.modulus();
+        if (mod1 == mod2) 
+        {
+            return real > other.real;  
+        }
+        return mod1 > mod2;
+    }
+
+    void print() const 
+    {
+        cout << "(" << real << ", " << imag << ")";
+    }
+};
+
+
+void shuffle(vector<Complex>& vec) {
+    for (int i = vec.size() - 1; i > 0; --i) 
+    {
+        int j = rand() % (i + 1);
+        swap(vec[i], vec[j]);
+    }
+}
+
+
+int findComplex(const vector<Complex>& vec, const Complex& target) 
+{
+    for (int i = 0; i < vec.size(); ++i) 
+    {
+        if (vec[i] == target) 
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+
+void insertComplex(vector<Complex>& vec, const Complex& c) 
+{
+    vec.push_back(c);
+}
+
+
+void deleteComplex(vector<Complex>& vec, const Complex& target) 
+{
+    vec.erase(remove(vec.begin(), vec.end(), target), vec.end());
+}
+
+
+void uniqueComplex(vector<Complex>& vec) 
+{
+    sort(vec.begin(), vec.end()); 
+    vec.erase(unique(vec.begin(), vec.end()), vec.end());
+}
+
+
+void bubbleSort(vector<Complex>& vec) 
+{
+    int n = vec.size();
+    for (int i = 0; i < n - 1; ++i) {
+        for (int j = 0; j < n - i - 1; ++j) 
+        {
+            if (vec[j] > vec[j + 1]) 
+            {  
+                swap(vec[j], vec[j + 1]);
+            }
+        }
+    }
+}
+
+
+void merge(vector<Complex>& vec, int lo, int mid, int hi) 
+{
+    vector<Complex> left(vec.begin() + lo, vec.begin() + mid);
+    vector<Complex> right(vec.begin() + mid, vec.begin() + hi);
+
+    int i = 0, j = 0, k = lo;
+    while (i < left.size() && j < right.size()) 
+    {
+        if (left[i] < right[j]) 
+        {
+            vec[k++] = left[i++];
+        }
+        else {
+            vec[k++] = right[j++];
+        }
+    }
+    while (i < left.size()) vec[k++] = left[i++];
+    while (j < right.size()) vec[k++] = right[j++];
+}
+
+
+void mergeSort(vector<Complex>& vec, int lo, int hi) 
+{
+    if (hi - lo < 2) return;
+    int mid = (lo + hi) / 2;
+    mergeSort(vec, lo, mid);
+    mergeSort(vec, mid, hi);
+    merge(vec, lo, mid, hi);
+}
+
+
+vector<Complex> rangeSearch(const vector<Complex>& vec, double m1, double m2) 
+{
+    vector<Complex> result;
+    for (const auto& c : vec) 
+    {
+        double mod = c.modulus();
+        if (mod >= m1 && mod < m2) 
+        {
+            result.push_back(c);
+        }
+    }
+    return result;
+}
+
+
+void printVector(const vector<Complex>& vec) 
+{
+    for (const auto& c : vec) 
+    {
+        c.print();
+        cout << " ";
+    }
+    cout << endl;
+}
+
+int main() 
+{
+    srand(time(0));
+    vector<Complex> vec;
+
+
+    for (int i = 0; i < 10; ++i) 
+    {
+        vec.push_back(Complex(rand() % 10, rand() % 10));
+    }
+
+    cout << "初始向量: ";
+    printVector(vec);
+
+
+    shuffle(vec);
+    cout << "置乱后的向量: ";
+    printVector(vec);
+
+
+    Complex target(3, 4);
+    int pos = findComplex(vec, target);
+    if (pos != -1) 
+    {
+        cout << "找到复数 (3, 4) 在位置: " << pos << endl;
+    }
+    else 
+    {
+        cout << "未找到复数 (3, 4)" << endl;
+    }
+
+  
+    insertComplex(vec, Complex(7, 8));
+    cout << "插入 (7, 8) 后的向量: ";
+    printVector(vec);
+
+
+    deleteComplex(vec, Complex(7, 8));
+    cout << "删除 (7, 8) 后的向量: ";
+    printVector(vec);
+
+ 
+    uniqueComplex(vec);
+    cout << "唯一化后的向量: ";
+    printVector(vec);
+
+    
+    vector<Complex> vecCopy = vec;
+
+    clock_t start = clock();
+    bubbleSort(vec);
+    clock_t end = clock();
+    cout << "冒泡排序后的向量: ";
+    printVector(vec);
+    cout << "冒泡排序耗时: " << double(end - start) / CLOCKS_PER_SEC << " 秒" << endl;
+
+    start = clock();
+    mergeSort(vecCopy, 0, vecCopy.size());
+    end = clock();
+    cout << "归并排序后的向量: ";
+    printVector(vecCopy);
+    cout << "归并排序耗时: " << double(end - start) / CLOCKS_PER_SEC << " 秒" << endl;
+
+
+    double m1 = 5, m2 = 10;
+    vector<Complex> result = rangeSearch(vec, m1, m2);
+    cout << "模介于 [" << m1 << ", " << m2 << ") 的复数: ";
+    printVector(result);
+
+    return 0;
+}
