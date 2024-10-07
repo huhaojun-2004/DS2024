@@ -1,70 +1,69 @@
 #include <iostream>
 #include <vector>
-#include <cmath>   
-#include <ctime>   
+#include <cmath>     
 #include <algorithm> 
-using namespace std;
-template <typename T>
+#include <chrono>  
 
-class Complex 
+
+using namespace std;
+
+class Complex
 {
 public:
     double real, imag;
     Complex(double r = 0, double i = 0) : real(r), imag(i) {}
 
-    double modulus() const 
+    double modulus() const
     {
         return sqrt(real * real + imag * imag);
     }
 
-    bool operator==(const Complex& other) const 
+    bool operator==(const Complex& other) const
     {
         return real == other.real && imag == other.imag;
     }
 
-    bool operator<(const Complex& other) const 
+    bool operator<(const Complex& other) const
     {
         double mod1 = modulus();
         double mod2 = other.modulus();
-        if (mod1 == mod2) 
+        if (mod1 == mod2)
         {
-            return real < other.real;  
+            return real < other.real;
         }
         return mod1 < mod2;
     }
 
-    bool operator>(const Complex& other) const 
+    bool operator>(const Complex& other) const
     {
         double mod1 = modulus();
         double mod2 = other.modulus();
-        if (mod1 == mod2) 
+        if (mod1 == mod2)
         {
-            return real > other.real;  
+            return real > other.real;
         }
         return mod1 > mod2;
     }
 
-    void print() const 
+    void print() const
     {
         cout << "(" << real << ", " << imag << ")";
     }
 };
 
-
 void shuffle(vector<Complex>& vec) {
-    for (int i = vec.size() - 1; i > 0; --i) 
+    for (int i = vec.size() - 1; i > 0; --i)
     {
         int j = rand() % (i + 1);
         swap(vec[i], vec[j]);
     }
 }
 
-
-int findComplex(const vector<Complex>& vec, const Complex& target) 
+int findComplex(const vector<Complex>& vec, const Complex& target)
 {
-    for (int i = 0; i < vec.size(); ++i) 
+    for (int i = 0; i < vec.size(); ++i)
     {
-        if (vec[i] == target) 
+        if (vec[i] == target)
         {
             return i;
         }
@@ -72,50 +71,45 @@ int findComplex(const vector<Complex>& vec, const Complex& target)
     return -1;
 }
 
-
-void insertComplex(vector<Complex>& vec, const Complex& c) 
+void insertComplex(vector<Complex>& vec, const Complex& c)
 {
     vec.push_back(c);
 }
 
-
-void deleteComplex(vector<Complex>& vec, const Complex& target) 
+void deleteComplex(vector<Complex>& vec, const Complex& target)
 {
     vec.erase(remove(vec.begin(), vec.end(), target), vec.end());
 }
 
-
-void uniqueComplex(vector<Complex>& vec) 
+void uniqueComplex(vector<Complex>& vec)
 {
-    sort(vec.begin(), vec.end()); 
+    sort(vec.begin(), vec.end());
     vec.erase(unique(vec.begin(), vec.end()), vec.end());
 }
 
-
-void bubbleSort(vector<Complex>& vec) 
+void bubbleSort(vector<Complex>& vec)
 {
     int n = vec.size();
     for (int i = 0; i < n - 1; ++i) {
-        for (int j = 0; j < n - i - 1; ++j) 
+        for (int j = 0; j < n - i - 1; ++j)
         {
-            if (vec[j] > vec[j + 1]) 
-            {  
+            if (vec[j] > vec[j + 1])
+            {
                 swap(vec[j], vec[j + 1]);
             }
         }
     }
 }
 
-
-void merge(vector<Complex>& vec, int lo, int mid, int hi) 
+void merge(vector<Complex>& vec, int lo, int mid, int hi)
 {
     vector<Complex> left(vec.begin() + lo, vec.begin() + mid);
     vector<Complex> right(vec.begin() + mid, vec.begin() + hi);
 
     int i = 0, j = 0, k = lo;
-    while (i < left.size() && j < right.size()) 
+    while (i < left.size() && j < right.size())
     {
-        if (left[i] < right[j]) 
+        if (left[i] < right[j])
         {
             vec[k++] = left[i++];
         }
@@ -127,8 +121,7 @@ void merge(vector<Complex>& vec, int lo, int mid, int hi)
     while (j < right.size()) vec[k++] = right[j++];
 }
 
-
-void mergeSort(vector<Complex>& vec, int lo, int hi) 
+void mergeSort(vector<Complex>& vec, int lo, int hi)
 {
     if (hi - lo < 2) return;
     int mid = (lo + hi) / 2;
@@ -137,14 +130,13 @@ void mergeSort(vector<Complex>& vec, int lo, int hi)
     merge(vec, lo, mid, hi);
 }
 
-
-vector<Complex> rangeSearch(const vector<Complex>& vec, double m1, double m2) 
+vector<Complex> rangeSearch(const vector<Complex>& vec, double m1, double m2)
 {
     vector<Complex> result;
-    for (const auto& c : vec) 
+    for (const auto& c : vec)
     {
         double mod = c.modulus();
-        if (mod >= m1 && mod < m2) 
+        if (mod >= m1 && mod < m2)
         {
             result.push_back(c);
         }
@@ -152,10 +144,9 @@ vector<Complex> rangeSearch(const vector<Complex>& vec, double m1, double m2)
     return result;
 }
 
-
-void printVector(const vector<Complex>& vec) 
+void printVector(const vector<Complex>& vec)
 {
-    for (const auto& c : vec) 
+    for (const auto& c : vec)
     {
         c.print();
         cout << " ";
@@ -163,13 +154,13 @@ void printVector(const vector<Complex>& vec)
     cout << endl;
 }
 
-int main() 
+
+int main()
 {
     srand(time(0));
     vector<Complex> vec;
 
-
-    for (int i = 0; i < 10; ++i) 
+    for (int i = 0; i < 10; ++i)
     {
         vec.push_back(Complex(rand() % 10, rand() % 10));
     }
@@ -177,60 +168,30 @@ int main()
     cout << "初始向量: ";
     printVector(vec);
 
-
     shuffle(vec);
     cout << "置乱后的向量: ";
     printVector(vec);
 
-
-    Complex target(3, 4);
-    int pos = findComplex(vec, target);
-    if (pos != -1) 
-    {
-        cout << "找到复数 (3, 4) 在位置: " << pos << endl;
-    }
-    else 
-    {
-        cout << "未找到复数 (3, 4)" << endl;
-    }
-
-  
-    insertComplex(vec, Complex(7, 8));
-    cout << "插入 (7, 8) 后的向量: ";
-    printVector(vec);
-
-
-    deleteComplex(vec, Complex(7, 8));
-    cout << "删除 (7, 8) 后的向量: ";
-    printVector(vec);
-
- 
-    uniqueComplex(vec);
-    cout << "唯一化后的向量: ";
-    printVector(vec);
-
-    
     vector<Complex> vecCopy = vec;
 
-    clock_t start = clock();
+    auto start = chrono::high_resolution_clock::now();
     bubbleSort(vec);
-    clock_t end = clock();
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> bubble_sort_time = end - start;
+
     cout << "冒泡排序后的向量: ";
     printVector(vec);
-    cout << "冒泡排序耗时: " << double(end - start) / CLOCKS_PER_SEC << " 秒" << endl;
+    cout << "冒泡排序耗时: " << bubble_sort_time.count() << " 毫秒" << endl;
 
-    start = clock();
+    start = chrono::high_resolution_clock::now();
     mergeSort(vecCopy, 0, vecCopy.size());
-    end = clock();
+    end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> merge_sort_time = end - start;
+
     cout << "归并排序后的向量: ";
     printVector(vecCopy);
-    cout << "归并排序耗时: " << double(end - start) / CLOCKS_PER_SEC << " 秒" << endl;
-
-
-    double m1 = 5, m2 = 10;
-    vector<Complex> result = rangeSearch(vec, m1, m2);
-    cout << "模介于 [" << m1 << ", " << m2 << ") 的复数: ";
-    printVector(result);
+    cout << "归并排序耗时: " << merge_sort_time.count() << " 毫秒" << endl;
 
     return 0;
 }
+
