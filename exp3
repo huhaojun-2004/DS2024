@@ -277,6 +277,7 @@ private:
 public:
     HuffTree() : root(nullptr) {}
 
+
     void build(const std::vector<std::pair<char, int>>& charFreqs) {
         std::priority_queue<HuffNode*, std::vector<HuffNode*>, Compare> pq;
         for (const auto& cf : charFreqs) {
@@ -293,21 +294,41 @@ public:
         root = pq.top();
     }
 
-    void displayHuffmanCodes() {
+ 
+    std::unordered_map<char, std::string> getCodes() {
         std::unordered_map<char, std::string> huffmanCodes;
         generateCodes(root, "", huffmanCodes);
-        for (const auto& code : huffmanCodes) {
-            std::cout << code.first << ": " << code.second << "\n";
-        }
+        return huffmanCodes;
     }
 };
 
 int main() {
+    std::string input;
+    std::cout << "请输入一串英文字符: ";
+    std::getline(std::cin, input);
+
+
+    std::unordered_map<char, int> freqMap;
+    for (char ch : input) {
+        if (isalpha(ch)) {
+            freqMap[ch]++;
+        }
+    }
+    std::vector<std::pair<char, int>> charFreqs;
+    for (const auto& pair : freqMap) {
+        charFreqs.push_back(pair);
+    }
+
     HuffTree huffTree;
-    std::vector<std::pair<char, int>> charFreqs = {
-        {'a', 5}, {'b', 9}, {'c', 12}, {'d', 13}, {'e', 16}, {'f', 45}
-    };
     huffTree.build(charFreqs);
-    huffTree.displayHuffmanCodes();
+    auto huffmanCodes = huffTree.getCodes();
+
+    std::cout << "字符编码如下:\n";
+    for (char ch : input) {
+        if (huffmanCodes.find(ch) != huffmanCodes.end()) {
+            std::cout << ch << ": " << huffmanCodes[ch] << "\n";
+        }
+    }
+
     return 0;
 }
