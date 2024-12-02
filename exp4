@@ -1,0 +1,371 @@
+#include <iostream>
+#include <vector>
+#include <climits>
+#include <queue> 
+#include <stack>
+using namespace std;  
+
+typedef enum { UNDISCOVERED, DISCOVERED, VISITED } VStatus;
+typedef enum { UNDETERMINED, TREE, CROSS, FORWARD, BACKWARD } EType;
+
+template <typename Tv>
+struct Vertex
+{
+    Tv data;
+    int inDegree, outDegree;
+    VStatus status; 
+    int dTime, fTime; 
+    int parent;
+    int priority; 
+
+
+    Vertex(Tv const& d = (Tv)0)
+        : data(d), inDegree(0), outDegree(0), status(UNDISCOVERED),
+        dTime(-1), fTime(-1), parent(-1), priority(INT_MAX) {} 
+};
+
+template <typename Te>
+struct Edge
+{ 
+    Te data;
+    int weight; 
+    EType type; 
+
+    Edge(Te const& d, int w) : data(d), weight(w), type(UNDETERMINED) {}
+};
+
+template <typename Tv, typename Te>
+class Graph
+{
+public:
+    int n;
+    virtual int insert(Tv const&) = 0;
+    virtual int inDegree(int) = 0;        
+    virtual int outDegree(int) = 0;    
+    virtual Tv remove(int) = 0;            
+    virtual Tv& vertex(int) = 0;           
+    virtual int firstNbr(int) = 0;      
+    virtual int nextNbr(int, int) = 0;  
+    virtual VStatus& status(int) = 0;     
+    virtual int& dTime(int) = 0;         
+    virtual int& fTime(int) = 0;          
+    virtual int& parent(int) = 0;        
+    virtual int& priority(int) = 0;        
+
+
+    
+    int e; 
+    virtual bool exists(int, int) = 0;                
+    virtual void insert(Te const&, int, int, int) = 0;
+    virtual int& weight(int, int) = 0;
+    virtual Te remove(int, int) = 0;                  
+    virtual EType& type(int, int) = 0;               
+    virtual Te& edge(int, int) = 0;                   
+
+};
+
+template <typename Tv, typename Te>
+class GraphMatrix : public Graph<Tv, Te>
+{
+private:
+    vector<Vertex<Tv>> V; 
+    vector<vector<Edge<Te>*>> E; 
+public:
+    GraphMatrix() { this->n = this->e = 0; } 
+
+    virtual Tv& vertex(int i) { return V[i].data; }          
+    virtual int inDegree(int i) { return V[i].inDegree; }  
+    virtual int outDegree(int i) { return V[i].outDegree; } 
+    virtual int nextNbr(int i, int j)
+    { 
+        while ((-1 < j) && !exists(i, --j)); return j;
+    }
+    virtual int firstNbr(int i) { return nextNbr(i, this->n); } 
+    virtual VStatus& status(int i) { return V[i].status; } 
+    virtual int& dTime(int i) { return V[i].dTime; }     
+    virtual int& fTime(int i) { return V[i].fTime; }      
+    virtual int& parent(int i) { return V[i].parent; }  
+    virtual int& priority(int i) { return V[i].priority; } 
+
+    virtual int insert(Tv const& vertex)
+    {
+        for (int j = 0; j < this->n; j++)
+            E[j].push_back(nullptr);
+        V.push_back(Vertex<Tv>(vertex));
+        this->n++;
+        E.push_back(vector<Edge<Te>*>(this->n, nullptr));
+        cout << "插入点" << vertex << endl;
+        return this->n-1;
+    }
+    virtual Tv remove(int i)
+    {
+        for (int j = 0; j < this->n; j++)
+        {
+            if (exists(i, j))
+            {
+                E[i][j] = nullptr;   
+                V[i].inDegree--;     
+                this->e--;                  
+            }
+        }
+        E.erase(E.begin() + i);
+        for (int j = 0; j < this->n; j++)
+        {
+             E[j].erase(E[j].begin() + i);  
+        }
+
+        V.erase(V.begin() + i);  
+        this->n--; 
+        Tv vBak = vertex(i);
+        return vBak;
+
+    }
+
+    virtual bool exists(int i, int j) { return (0 <= i) && (0 <= j) && (j < this->n) && E[i][j] != nullptr; }
+    virtual int& weight(int i, int j) { return E[i][j]->weight; }     // 获取权重
+    virtual EType& type(int i, int j) { return E[i][j]->type; }
+    virtual Te& edge(int i, int j) { return E[i][j]->data; }
+    virtual void insert(Te const& edge, int w, int i, int j)
+    { 
+        if (exists(i, j)) return;
+        E[i][j] = new Edge<Te>(edge, w);
+        this->e++;
+        V[i].outDegree++;
+        V[j].inDegree++;
+        cout << "插入由" << vertex(i) << "指向" << vertex(j) << endl;
+    }
+    virtual Te remove(int i, int j) 
+    { 
+        Te eBak = edge(i, j);
+        delete E[i][j];
+        E[i][j] = nullptr;
+        this->e--;
+        V[i].outDegree--;
+        V[j].inDegree--;
+        return eBak;
+    }
+    void reset()
+    {
+        for (int i = 0; i < this->n; i++)
+        {
+            status(i) = UNDISCOVERED;
+            for (int j = 0; j < this->n; j++)
+            {
+                if (exists(i, j)) type(i, j) = UNDETERMINED;
+            }
+        }
+        
+    }
+    void BFS(int v)
+    {
+        reset();
+        queue<int>Q; vector<int> list; 
+        Q.push(v);
+        while (!Q.empty())
+        {
+            int v = Q.front();
+            status(v) = VISITED;
+            list.push_back(v);
+            Q.pop();
+            for (int u = firstNbr(v); u > -1; u = nextNbr(v, u))
+            {
+                if (status(u) == UNDISCOVERED)
+                {
+                    Q.push(u);
+                    status(u) = DISCOVERED;
+                }
+            }
+        }
+        for (auto x : list) 
+        {
+            cout << vertex(x) << " ";
+        }
+        cout << endl;
+    }
+    void DFS(int v)
+    {
+        reset();
+        stack<int> s; vector<int> list;
+        s.push(v);
+        while (!s.empty())
+        {
+            int v = s.top();
+            status(v) = VISITED;
+            list.push_back(v); s.pop();
+            for (int u = firstNbr(v); u > -1; u = nextNbr(v, u))
+            {
+                if (status(u) == UNDISCOVERED)
+                {
+                    s.push(u);
+                    status(u) = DISCOVERED;
+                }
+            }
+        } 
+        for (auto x : list)
+        {
+            cout << vertex(x) << " ";
+        }
+        cout << endl;
+    }
+    void Dijkstra(int v)
+    {
+        vector<int> dist(this->n, INT_MAX);  
+        vector<int> parent(this->n, -1);    
+        vector<bool> visited(this->n, false);
+        dist[v] = 0;  
+
+        for (int i = 0; i < this->n; i++) 
+        {
+            int u = -1;
+            int minDist = INT_MAX;
+            for (int j = 0; j < this->n; j++) 
+            {
+                if (!visited[j] && dist[j] < minDist) 
+                {
+                    minDist = dist[j];
+                    u = j;
+                }
+            }
+            if (u == -1) break;
+            visited[u] = true;  
+            for (int w = firstNbr(u); w != -1; w = nextNbr(u, w)) 
+            {
+                if (exists(u, w)) 
+                {
+                    int newDist = dist[u] + weight(u, w);  
+                    if (newDist < dist[w]) 
+                    {  
+                        dist[w] = newDist;  
+                        parent[w] = u;      
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < this->n; i++) 
+        {
+            cout << "从 " << vertex(v) << " 到 " << vertex(i) << " 的最短路径是：";
+            if (dist[i] == INT_MAX) {
+                cout << "无法到达" << endl;
+            }
+            else {
+                cout << dist[i] << " 距离, 路径：";
+                stack<int> path;
+                for (int x = i; x != -1; x = parent[x]) 
+                {
+                    path.push(x);
+                }
+                while (!path.empty()) {
+                    cout << vertex(path.top()) << " ";
+                    path.pop();
+                }
+                cout << endl;
+            }
+        }
+    }
+
+    void Prim(int v)
+    {
+        vector<int> dist(this->n, INT_MAX); 
+        vector<int> parent(this->n, -1);   
+        vector<bool> visited(this->n, false);
+        dist[v] = 0;  
+        int totalWeight = 0;
+        cout << "最小生成树的边：\n";
+
+        for (int i = 0; i < this->n; i++)
+        {
+            int u = -1;
+            int minDist = INT_MAX;
+            for (int j = 0; j < this->n; j++)
+            {
+                if (!visited[j] && dist[j] < minDist)
+                {
+                    minDist = dist[j];
+                    u = j;
+                }
+            }
+
+            if (u == -1) break; 
+
+            visited[u] = true;  
+            totalWeight += minDist;  
+
+            if (parent[u] != -1) 
+            {
+                cout << "从 " << vertex(parent[u]) << " 到 " << vertex(u)
+                    << " 权重 " << minDist << endl;
+            }
+
+            for (int w = 0; w < this->n; w++)
+            {
+                if (exists(u, w) && !visited[w] && weight(u, w) < dist[w])
+                {
+                    dist[w] = weight(u, w);
+                    parent[w] = u;  
+                }
+            }
+        }
+
+        cout << "最小生成树的总权重为：" << totalWeight << endl;
+    }
+
+
+};
+
+int main()
+{
+    GraphMatrix<string, int> graph;
+   
+    int v0 = graph.insert("A");
+    int v1 = graph.insert("B");
+    int v2 = graph.insert("C");
+    int v3 = graph.insert("D");
+    int v4 = graph.insert("E");
+    int v5 = graph.insert("F");
+    
+
+    graph.insert(0, 2, v0, v1);  
+    graph.insert(0, 5, v0, v2);  
+    graph.insert(0, 1, v1, v2); 
+    graph.insert(0, 3, v1, v3);  
+    graph.insert(0, 3, v2, v3);  
+    graph.insert(0, 4, v2, v4); 
+    graph.insert(0, 1, v2, v5);
+    graph.insert(0, 1, v3, v4);
+    graph.insert(0, 4, v3, v5);
+    graph.insert(0, 1, v4, v5);
+    
+
+    
+
+    cout << "\n度数" << endl;
+    for (int i = 0; i < graph.n; i++)
+    {
+        cout << graph.vertex(i) << "有";
+        cout << graph.inDegree(i) << "入度";
+        cout << graph.outDegree(i) << "出度" << endl;
+    }
+
+    cout << "\n权重" << endl;
+    for (int i = 0; i < graph.n; i++)
+    {
+        for (int j = 0; j < graph.n; j++)
+        {
+            if (graph.exists(i, j))
+            {
+                cout << "边" << graph.vertex(i) << " to " << graph.vertex(j)<< "权重 " << graph.weight(i, j) <<endl;
+            }
+        }
+    }
+
+    cout << "\nBFS" <<  endl;
+    graph.BFS(v0);
+    cout << "\nDFS" <<endl;
+    graph.DFS(v0);
+    cout << "\nDijkstra" << endl;
+    graph.Dijkstra(v0);
+    cout << "\nprim" << endl;
+    graph.Prim(v0);
+    return 0;
+}
